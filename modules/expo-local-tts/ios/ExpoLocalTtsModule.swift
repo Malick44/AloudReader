@@ -47,15 +47,20 @@ private final class OfflineTtsHandle {
     self.pointer = pointer
   }
 
-  func generate(text: String, speakerId: Int32, speed: Float) throws -> UnsafePointer<SherpaOnnxGeneratedAudio> {
+  func generate(text: String, speakerId: Int32, speed: Float) throws -> UnsafePointer<
+    SherpaOnnxGeneratedAudio
+  > {
     return try lock.withLock {
       guard let pointer else {
-        throw ExpoLocalTtsModule.makeError(code: 2101, message: "Sherpa engine is already released.")
+        throw ExpoLocalTtsModule.makeError(
+          code: 2101, message: "Sherpa engine is already released.")
       }
 
       return try text.withCString { textPointer in
-        guard let audio = SherpaOnnxOfflineTtsGenerate(pointer, textPointer, speakerId, speed) else {
-          throw ExpoLocalTtsModule.makeError(code: 2102, message: "Sherpa generation returned no audio.")
+        guard let audio = SherpaOnnxOfflineTtsGenerate(pointer, textPointer, speakerId, speed)
+        else {
+          throw ExpoLocalTtsModule.makeError(
+            code: 2102, message: "Sherpa generation returned no audio.")
         }
         return audio
       }
@@ -96,7 +101,8 @@ private struct ModelState {
 }
 
 public class ExpoLocalTtsModule: Module {
-  private let modelStateQueue = DispatchQueue(label: "com.aiorbitstudio.aloudreader.tts.model-state")
+  private let modelStateQueue = DispatchQueue(
+    label: "com.aiorbitstudio.aloudreader.tts.model-state")
   private var modelStates: [String: ModelState] = [:]
 
   deinit {
@@ -168,7 +174,8 @@ public class ExpoLocalTtsModule: Module {
         throw Self.makeError(code: 2007, message: "Model is not initialized: \(modelId)")
       }
 
-      let generatedAudio = try state.handle.generate(text: trimmedText, speakerId: speakerId, speed: speed)
+      let generatedAudio = try state.handle.generate(
+        text: trimmedText, speakerId: speakerId, speed: speed)
       defer {
         SherpaOnnxDestroyOfflineTtsGeneratedAudio(generatedAudio)
       }
@@ -191,7 +198,8 @@ public class ExpoLocalTtsModule: Module {
     AsyncFunction("speak") { (_: String, _: [String: Any]) in
       throw Self.makeError(
         code: 2009,
-        message: "Native local speak() is intentionally not implemented. Use synthesizeToFile() and expo-audio playback."
+        message:
+          "Native local speak() is intentionally not implemented. Use synthesizeToFile() and expo-audio playback."
       )
     }
 
@@ -228,7 +236,7 @@ public class ExpoLocalTtsModule: Module {
       return [
         "available": true,
         "initializedModelIds": initializedModelIds,
-        "message": "Sherpa-ONNX iOS runtime linked and ready."
+        "message": "Sherpa-ONNX iOS runtime linked and ready.",
       ]
     }
   }
@@ -258,7 +266,9 @@ public class ExpoLocalTtsModule: Module {
         tokensPath: Self.normalizeFilePath(assets["tokensPath"] as? String),
         dataDirPath: Self.normalizeFilePath(assets["dataDirPath"] as? String),
         lexiconPath: Self.normalizeFilePath(assets["lexiconPath"] as? String),
-        ruleFstsPaths: ((assets["ruleFstsPaths"] as? [String]) ?? []).map { Self.normalizeFilePath($0) ?? $0 },
+        ruleFstsPaths: ((assets["ruleFstsPaths"] as? [String]) ?? []).map {
+          Self.normalizeFilePath($0) ?? $0
+        },
         configPath: Self.normalizeFilePath(assets["configPath"] as? String),
         voicesPath: Self.normalizeFilePath(assets["voicesPath"] as? String)
       )
@@ -321,29 +331,45 @@ public class ExpoLocalTtsModule: Module {
 
   private func validateFamilyAssets(_ config: NativeModelConfig) throws {
     guard FileManager.default.fileExists(atPath: config.assets.modelPath) else {
-      throw Self.makeError(code: 2012, message: "Missing assets.modelPath: \(config.assets.modelPath)")
+      throw Self.makeError(
+        code: 2012, message: "Missing assets.modelPath: \(config.assets.modelPath)")
     }
 
     switch config.family {
     case "piper", "vits":
-      guard let tokensPath = config.assets.tokensPath, FileManager.default.fileExists(atPath: tokensPath) else {
-        throw Self.makeError(code: 2013, message: "assets.tokensPath is required for family \(config.family).")
+      guard let tokensPath = config.assets.tokensPath,
+        FileManager.default.fileExists(atPath: tokensPath)
+      else {
+        throw Self.makeError(
+          code: 2013, message: "assets.tokensPath is required for family \(config.family).")
       }
     case "kokoro":
-      guard let voicesPath = config.assets.voicesPath, FileManager.default.fileExists(atPath: voicesPath) else {
-        throw Self.makeError(code: 2014, message: "assets.voicesPath is required for family kokoro.")
+      guard let voicesPath = config.assets.voicesPath,
+        FileManager.default.fileExists(atPath: voicesPath)
+      else {
+        throw Self.makeError(
+          code: 2014, message: "assets.voicesPath is required for family kokoro.")
       }
-      guard let tokensPath = config.assets.tokensPath, FileManager.default.fileExists(atPath: tokensPath) else {
-        throw Self.makeError(code: 2015, message: "assets.tokensPath is required for family kokoro.")
+      guard let tokensPath = config.assets.tokensPath,
+        FileManager.default.fileExists(atPath: tokensPath)
+      else {
+        throw Self.makeError(
+          code: 2015, message: "assets.tokensPath is required for family kokoro.")
       }
     case "matcha":
-      guard let tokensPath = config.assets.tokensPath, FileManager.default.fileExists(atPath: tokensPath) else {
-        throw Self.makeError(code: 2016, message: "assets.tokensPath is required for family matcha.")
+      guard let tokensPath = config.assets.tokensPath,
+        FileManager.default.fileExists(atPath: tokensPath)
+      else {
+        throw Self.makeError(
+          code: 2016, message: "assets.tokensPath is required for family matcha.")
       }
-      guard let vocoderPath = resolveMatchaVocoderPath(config), FileManager.default.fileExists(atPath: vocoderPath) else {
+      guard let vocoderPath = resolveMatchaVocoderPath(config),
+        FileManager.default.fileExists(atPath: vocoderPath)
+      else {
         throw Self.makeError(
           code: 2017,
-          message: "Unable to locate matcha vocoder ONNX. Add assets.configPath or include a second .onnx in installDir."
+          message:
+            "Unable to locate matcha vocoder ONNX. Add assets.configPath or include a second .onnx in installDir."
         )
       }
     default:
@@ -356,7 +382,8 @@ public class ExpoLocalTtsModule: Module {
     strings: CStringStore
   ) throws -> SherpaOnnxOfflineTtsVitsModelConfig {
     guard let tokensPath = config.assets.tokensPath else {
-      throw Self.makeError(code: 2019, message: "assets.tokensPath is required for \(config.family).")
+      throw Self.makeError(
+        code: 2019, message: "assets.tokensPath is required for \(config.family).")
     }
 
     return SherpaOnnxOfflineTtsVitsModelConfig(
@@ -404,7 +431,8 @@ public class ExpoLocalTtsModule: Module {
     guard let vocoderPath = resolveMatchaVocoderPath(config) else {
       throw Self.makeError(
         code: 2023,
-        message: "Unable to locate matcha vocoder ONNX. Add assets.configPath or include a second .onnx in installDir."
+        message:
+          "Unable to locate matcha vocoder ONNX. Add assets.configPath or include a second .onnx in installDir."
       )
     }
 
@@ -533,7 +561,9 @@ public class ExpoLocalTtsModule: Module {
     )
   }
 
-  private func emptyZipvoiceConfig(_ strings: CStringStore) -> SherpaOnnxOfflineTtsZipvoiceModelConfig {
+  private func emptyZipvoiceConfig(_ strings: CStringStore)
+    -> SherpaOnnxOfflineTtsZipvoiceModelConfig
+  {
     return SherpaOnnxOfflineTtsZipvoiceModelConfig(
       tokens: strings.cString(""),
       encoder: strings.cString(""),
@@ -623,7 +653,7 @@ public class ExpoLocalTtsModule: Module {
     let bitsPerSample: UInt16 = 16
     let paddingSamples = Int(sampleRate) * paddingMs / 1000
     let totalSamples = paddingSamples + count + paddingSamples
-    let dataSize = totalSamples * 2 // 2 bytes per PCM-16 sample
+    let dataSize = totalSamples * 2  // 2 bytes per PCM-16 sample
     let byteRate = Int(sampleRate) * Int(numChannels) * Int(bitsPerSample / 8)
     let blockAlign = Int(numChannels) * Int(bitsPerSample / 8)
     let riffChunkSize = 36 + dataSize
@@ -646,7 +676,7 @@ public class ExpoLocalTtsModule: Module {
     // fmt sub-chunk
     wav.append(contentsOf: "fmt ".utf8)
     appendU32LE(16)
-    appendU16LE(1)                       // PCM
+    appendU16LE(1)  // PCM
     appendU16LE(numChannels)
     appendU32LE(UInt32(sampleRate))
     appendU32LE(UInt32(byteRate))
@@ -673,8 +703,8 @@ public class ExpoLocalTtsModule: Module {
   }
 }
 
-private extension URL {
-  func ensureDirectoryExists() throws {
+extension URL {
+  fileprivate func ensureDirectoryExists() throws {
     try FileManager.default.createDirectory(
       at: self,
       withIntermediateDirectories: true,
@@ -683,9 +713,9 @@ private extension URL {
   }
 }
 
-private extension NSLock {
+extension NSLock {
   @discardableResult
-  func withLock<T>(_ work: () throws -> T) rethrows -> T {
+  fileprivate func withLock<T>(_ work: () throws -> T) rethrows -> T {
     lock()
     defer { unlock() }
     return try work()
