@@ -71,7 +71,7 @@ export function MiniPlayerBar({
                         accessibilityLabel={t('reader.stop_button')}
                         hitSlop={8}
                     >
-                        <Text style={[styles.btnText, { color: colors.mutedForeground }]}>{'⏹'}</Text>
+                        <Text style={[styles.btnText, { color: colors.mutedForeground }]}>{String.fromCharCode(0x23F9)}</Text>
                     </Pressable>
                 </View>
             </View>

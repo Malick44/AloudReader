@@ -385,17 +385,30 @@ class ExpoLocalTtsModule : Module() {
     floatSamples: FloatArray,
     sampleRate: Int,
     channels: Int,
+    // 200 ms leading silence: masks Android AudioTrack hardware warmup pop on
+    // the first chunk.  50 ms trailing silence prevents click at chunk boundary.
+    // With gapless playback subsequent chunks don't re-create the AudioTrack,
+    // but the first chunk still needs the longer lead-in.
+    leadingPaddingMs: Int = 200,
+    trailingPaddingMs: Int = 50,
   ) {
     out.parentFile?.mkdirs()
 
-    val pcm = ByteArray(floatSamples.size * 2)
-    var index = 0
+    // Silence padding prevents click/pop when the waveform is non-zero at the
+    // start or end of a synthesized segment.
+    val leadingSamples = (sampleRate * leadingPaddingMs / 1000) * channels
+    val trailingSamples = (sampleRate * trailingPaddingMs / 1000) * channels
+    val leadingBytes = leadingSamples * 2
+    val totalSamples = leadingSamples + floatSamples.size + trailingSamples
+    val pcm = ByteArray(totalSamples * 2) // zero-initialised → silence
+    var index = leadingBytes // skip the leading silence region
     for (sample in floatSamples) {
       val clamped = sample.coerceIn(-1f, 1f)
       val pcm16 = (clamped * 32767f).toInt().toShort()
       pcm[index++] = (pcm16.toInt() and 0xFF).toByte()
       pcm[index++] = ((pcm16.toInt() shr 8) and 0xFF).toByte()
     }
+    // trailing silence region is already zeroed by ByteArray initialisation
 
     val byteRate = sampleRate * channels * 2
     val blockAlign = (channels * 2).toShort()

@@ -1,8 +1,8 @@
 import * as FileSystem from 'expo-file-system/legacy';
 import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppHeader } from '@/components/ui/AppHeader';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { initializeInstalledModel, listInstalledModels, synthesizeToFile } from '@/lib/tts';
@@ -189,7 +189,8 @@ export default function BenchmarkRoute() {
   };
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
+    <View style={[styles.safeArea, { backgroundColor: colors.background }]}>
+      <AppHeader title={TITLE_TEXT} />
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
         <Card>
           <Text style={[styles.title, { color: colors.foreground }]}>{TITLE_TEXT}</Text>
@@ -224,7 +225,7 @@ export default function BenchmarkRoute() {
             ))
           : null}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 

@@ -1,11 +1,10 @@
-import type { AudioPlayer } from 'expo-audio';
-
 import { initializeAudioSession } from './audioSession';
 import { chunkText } from './chunker';
 import { createCacheKey, getCachedAudioForKey, reserveCachePath } from './cache';
 import { DEFAULT_CHUNK_SIZE } from './constants';
 import { TtsError } from './errors';
 import { synthesizeToFileNative } from './native-synthesis';
+import { getNativeSynthesisSpeedFromUiRate } from './playback-rate';
 import { PlaybackQueue, QueueStateSnapshot } from './queue';
 import { PipelineChunkResult, PipelineOptions, PipelineResult } from './types';
 
@@ -18,10 +17,12 @@ export async function preparePipeline(text: string, options: PipelineOptions): P
   const results = [] as PipelineResult['chunks'];
 
   for (const chunk of chunks) {
+    const speed = getNativeSynthesisSpeedFromUiRate(options.rate);
     const cacheKey = await createCacheKey({
       modelId: options.modelId,
       text: chunk.text,
       language: options.language,
+      speed,
     });
 
     const cached = await getCachedAudioForKey(cacheKey);
@@ -36,6 +37,7 @@ export async function preparePipeline(text: string, options: PipelineOptions): P
         modelId: options.modelId,
         outputPath,
         language: options.language,
+        speed,
       });
       results.push({ chunk, cacheKey, audioPath: filePath, usedFallback: false });
     } catch (error) {
@@ -55,12 +57,11 @@ export async function preparePipeline(text: string, options: PipelineOptions): P
 }
 
 export async function playPipeline(
-  player: AudioPlayer,
   pipeline: PipelineResult,
   options: PipelineOptions,
   onProgress?: (done: number, total: number) => void
 ): Promise<void> {
-  const controller = createPipelinePlaybackController(player);
+  const controller = createPipelinePlaybackController();
   try {
     await controller.play(pipeline, options, onProgress);
   } finally {
@@ -72,10 +73,12 @@ async function resolveChunkAudioPath(
   chunk: PipelineChunkResult['chunk'],
   options: PipelineOptions
 ): Promise<PipelineChunkResult> {
+  const speed = getNativeSynthesisSpeedFromUiRate(options.rate);
   const cacheKey = await createCacheKey({
     modelId: options.modelId,
     text: chunk.text,
     language: options.language,
+    speed,
   });
 
   const cached = await getCachedAudioForKey(cacheKey);
@@ -89,6 +92,7 @@ async function resolveChunkAudioPath(
       modelId: options.modelId,
       outputPath,
       language: options.language,
+      speed,
     });
 
     return { chunk, cacheKey, audioPath: filePath, usedFallback: false };
@@ -104,15 +108,16 @@ async function resolveChunkAudioPath(
 
 export type StreamingPipelineCallbacks = {
   onPipelineReady?: (pipeline: PipelineResult) => void;
+  onChunkResolved?: (index: number, total: number, item: PipelineChunkResult) => void;
   onChunkStart?: (index: number, total: number, item: PipelineChunkResult) => void;
   onProgress?: (done: number, total: number) => void;
 };
 
 export async function playStreamingPipeline(
-  player: AudioPlayer,
   text: string,
   options: PipelineOptions,
-  callbacks: StreamingPipelineCallbacks = {}
+  callbacks: StreamingPipelineCallbacks = {},
+  controller?: PipelinePlaybackController
 ): Promise<PipelineResult> {
   if (!text.trim()) {
     throw new TtsError('INVALID_INPUT', 'Cannot synthesize empty text.');
@@ -145,6 +150,7 @@ export async function playStreamingPipeline(
     const promise = resolveChunkAudioPath(pipeline.chunks[index].chunk, options)
       .then((resolved) => {
         pipeline.chunks[index] = resolved;
+        callbacks.onChunkResolved?.(index, pipeline.chunks.length, resolved);
         return resolved;
       })
       .finally(() => {
@@ -160,19 +166,26 @@ export async function playStreamingPipeline(
     void resolveChunk(1).catch(() => undefined);
   }
 
-  const controller = createPipelinePlaybackController(player);
-  await controller.play(pipeline, options, callbacks.onProgress, {
-    onChunkStart(index, total, item) {
-      callbacks.onChunkStart?.(index, total, item);
-      const nextIndex = index + 1;
-      if (nextIndex < pipeline.chunks.length) {
-        void resolveChunk(nextIndex).catch(() => undefined);
-      }
-    },
-    async resolveChunkAudio(index) {
-      return resolveChunk(index);
-    },
-  });
+  const activeController = controller ?? createPipelinePlaybackController();
+
+  try {
+    await activeController.play(pipeline, options, callbacks.onProgress, {
+      onChunkStart(index, total, item) {
+        callbacks.onChunkStart?.(index, total, item);
+        const nextIndex = index + 1;
+        if (nextIndex < pipeline.chunks.length) {
+          void resolveChunk(nextIndex).catch(() => undefined);
+        }
+      },
+      async resolveChunkAudio(index) {
+        return resolveChunk(index);
+      },
+    });
+  } finally {
+    if (!controller) {
+      activeController.dispose();
+    }
+  }
 
   return pipeline;
 }
@@ -198,12 +211,23 @@ export type PipelinePlaybackController = {
   stop: () => Promise<void>;
   skipChunk: () => Promise<void>;
   rewindChunk: () => Promise<void>;
+  setPlaybackRate: (rate: number) => void;
   getSnapshot: () => QueueStateSnapshot;
   dispose: () => void;
 };
 
-export function createPipelinePlaybackController(player: AudioPlayer): PipelinePlaybackController {
-  const queue = new PlaybackQueue(player);
+let sharedQueue: PlaybackQueue | null = null;
+
+function getSharedQueue(): PlaybackQueue {
+  if (!sharedQueue) {
+    sharedQueue = new PlaybackQueue();
+  }
+
+  return sharedQueue;
+}
+
+export function createPipelinePlaybackController(): PipelinePlaybackController {
+  const queue = getSharedQueue();
 
   return {
     async play(
@@ -238,11 +262,14 @@ export function createPipelinePlaybackController(player: AudioPlayer): PipelineP
     rewindChunk() {
       return queue.rewindCurrent();
     },
+    setPlaybackRate(rate: number) {
+      queue.setPlaybackRate(rate);
+    },
     getSnapshot() {
       return queue.getSnapshot();
     },
     dispose() {
-      queue.dispose();
+      // Shared singleton transport should stay alive across screen transitions.
     },
   };
 }

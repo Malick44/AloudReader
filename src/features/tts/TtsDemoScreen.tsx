@@ -1,4 +1,3 @@
-import { useAudioPlayer } from 'expo-audio';
 import { useEffect, useMemo, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,6 +9,7 @@ import { useAppTranslation } from '@/i18n/hooks';
 import {
   DetectedLanguage,
   getEngineStatus,
+  getNativeSynthesisSpeedFromUiRate,
   initializeInstalledModel,
   initializeAudioSession,
   installFromCatalog,
@@ -20,6 +20,7 @@ import {
   synthesizeToFile,
   stop,
 } from '@/lib/tts';
+import { playStandaloneFile, stopTrackPlayer } from '@/lib/tts/trackPlayer';
 import { useThemeColors } from '@/theme/useThemeColors';
 
 import { useTtsUiStore } from './tts-store';
@@ -39,15 +40,12 @@ export function TtsDemoScreen() {
   const [autoRouteEnabled, setAutoRouteEnabled] = useState(AUTO_ROUTE_DEFAULT);
   const [modelPickerVisible, setModelPickerVisible] = useState(false);
   const colors = useThemeColors();
-  const player = useAudioPlayer(null, {
-    updateInterval: 100,
-    keepAudioSessionActive: true,
-  });
   const { t } = useAppTranslation();
 
   const selectedModelId = useTtsUiStore((state) => state.selectedModelId);
   const sampleText = useTtsUiStore((state) => state.sampleText);
   const statusMessage = useTtsUiStore((state) => state.statusMessage);
+  const playbackRate = useTtsUiStore((state) => state.playbackRate);
   const setSelectedModelId = useTtsUiStore((state) => state.setSelectedModelId);
   const setSampleText = useTtsUiStore((state) => state.setSampleText);
   const setStatusMessage = useTtsUiStore((state) => state.setStatusMessage);
@@ -106,7 +104,7 @@ export function TtsDemoScreen() {
     }
     setEngineMessage(
       engine.message ??
-        (engine.available ? t('tts.engine_available_status') : t('tts.engine_unavailable_status'))
+      (engine.available ? t('tts.engine_available_status') : t('tts.engine_unavailable_status'))
     );
   };
 
@@ -173,9 +171,18 @@ export function TtsDemoScreen() {
       await initializeAudioSession();
       const outputPath = await synthesizeToFile(sampleText, {
         modelId: resolved.modelId,
+        speed: getNativeSynthesisSpeedFromUiRate(playbackRate),
       });
-      player.replace({ uri: outputPath });
-      player.play();
+      await playStandaloneFile(
+        outputPath,
+        {
+          id: `tts-demo-${resolved.modelId}`,
+          title: t('tts.sample_text_label'),
+          artist: resolved.modelId,
+        },
+        playbackRate,
+        { generatedSpeech: true }
+      );
       if (resolved.detectedLanguage) {
         const language = detectedLanguageLabel(resolved.detectedLanguage);
         const statusKey = resolved.usedFallbackModel
@@ -195,7 +202,7 @@ export function TtsDemoScreen() {
   const runStop = async () => {
     setBusy(true);
     try {
-      player.pause();
+      await stopTrackPlayer();
       await stop();
       setStatusMessage(t('tts.stop_completed_status'));
     } catch (error) {

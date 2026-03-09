@@ -8,14 +8,14 @@ export default function AuthLayout() {
     return (
         <Stack
             screenOptions={{
-                headerShadowVisible: false,
+                headerShown: false,
                 animation: 'fade',
             }}
         >
-            <Stack.Screen name="welcome" options={{ headerShown: false }} />
-            <Stack.Screen name="sign-in" options={{ title: t('auth.sign_in_title') }} />
-            <Stack.Screen name="sign-up" options={{ title: t('auth.sign_up_title') }} />
-            <Stack.Screen name="forgot-password" options={{ title: t('auth.forgot_password_title') }} />
+            <Stack.Screen name="welcome" />
+            <Stack.Screen name="sign-in" />
+            <Stack.Screen name="sign-up" />
+            <Stack.Screen name="forgot-password" />
         </Stack>
     );
 }

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppHeader } from '@/components/ui/AppHeader';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
@@ -132,8 +132,9 @@ export function PhysicalQaScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
+    <View style={[styles.safeArea, { backgroundColor: colors.background }]}>
+      <AppHeader title={t('physical_qa.title')} />
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.contentInner}>
         <Card>
           <Text style={[styles.title, { color: colors.foreground }]}>{t('physical_qa.title')}</Text>
           <Text style={[styles.caption, { color: colors.mutedForeground }]}>
@@ -339,14 +340,14 @@ export function PhysicalQaScreen() {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   scroll: { flex: 1 },
-  content: { gap: 16, padding: 16 },
+  contentInner: { gap: 16, padding: 16 },
   title: { fontSize: 18, fontWeight: '700', marginBottom: 8 },
   label: { fontSize: 15, fontWeight: '600' },
   labelTop: { marginTop: 12, marginBottom: 6 },

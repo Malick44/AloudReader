@@ -74,3 +74,13 @@ const typedClient = isSupabaseConfigured
   : null;
 
 export const supabase = (typedClient ?? noopClient) as unknown as SupabaseClientLike;
+
+/**
+ * Returns the authenticated Supabase user's id, or null when Supabase is not
+ * configured or the user is not signed in.
+ */
+export async function getCurrentUserId(): Promise<string | null> {
+  if (!typedClient) return null;
+  const { data } = await typedClient.auth.getUser();
+  return data?.user?.id ?? null;
+}

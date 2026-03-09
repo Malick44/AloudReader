@@ -176,18 +176,14 @@ public class ExpoLocalTtsModule: Module {
       let outputURL = try self.resolveOutputURL(path: requestedOutputPath, modelId: modelId)
       try outputURL.deletingLastPathComponent().ensureDirectoryExists()
 
-      let writeResult = outputURL.path.withCString { pathPointer in
-        SherpaOnnxWriteWave(
-          generatedAudio.pointee.samples,
-          generatedAudio.pointee.n,
-          generatedAudio.pointee.sample_rate,
-          pathPointer
-        )
-      }
-
-      if writeResult == 0 {
-        throw Self.makeError(code: 2008, message: "Sherpa failed to write WAV to \(outputURL.path).")
-      }
+      // Write a WAV with 50 ms of silence padding at both ends to prevent
+      // click/pop artefacts at chunk boundaries during playback.
+      try Self.writeWaveWithSilencePadding(
+        samples: generatedAudio.pointee.samples,
+        count: Int(generatedAudio.pointee.n),
+        sampleRate: generatedAudio.pointee.sample_rate,
+        to: outputURL
+      )
 
       return outputURL.path
     }
@@ -611,6 +607,69 @@ public class ExpoLocalTtsModule: Module {
     }
 
     return trimmed
+  }
+
+  /// Writes a 16-bit PCM WAV file that includes `paddingMs` milliseconds of
+  /// silence at both the start and end.  The silence prevents audible
+  /// click/pop artefacts when the audio player transitions between chunks.
+  private static func writeWaveWithSilencePadding(
+    samples: UnsafePointer<Float>?,
+    count: Int,
+    sampleRate: Int32,
+    to outputURL: URL,
+    paddingMs: Int = 50
+  ) throws {
+    let numChannels: UInt16 = 1
+    let bitsPerSample: UInt16 = 16
+    let paddingSamples = Int(sampleRate) * paddingMs / 1000
+    let totalSamples = paddingSamples + count + paddingSamples
+    let dataSize = totalSamples * 2 // 2 bytes per PCM-16 sample
+    let byteRate = Int(sampleRate) * Int(numChannels) * Int(bitsPerSample / 8)
+    let blockAlign = Int(numChannels) * Int(bitsPerSample / 8)
+    let riffChunkSize = 36 + dataSize
+
+    var wav = Data(capacity: 44 + dataSize)
+
+    func appendU16LE(_ v: UInt16) {
+      var le = v.littleEndian
+      withUnsafeBytes(of: &le) { wav.append(contentsOf: $0) }
+    }
+    func appendU32LE(_ v: UInt32) {
+      var le = v.littleEndian
+      withUnsafeBytes(of: &le) { wav.append(contentsOf: $0) }
+    }
+
+    // RIFF/WAVE header
+    wav.append(contentsOf: "RIFF".utf8)
+    appendU32LE(UInt32(riffChunkSize))
+    wav.append(contentsOf: "WAVE".utf8)
+    // fmt sub-chunk
+    wav.append(contentsOf: "fmt ".utf8)
+    appendU32LE(16)
+    appendU16LE(1)                       // PCM
+    appendU16LE(numChannels)
+    appendU32LE(UInt32(sampleRate))
+    appendU32LE(UInt32(byteRate))
+    appendU16LE(UInt16(blockAlign))
+    appendU16LE(bitsPerSample)
+    // data sub-chunk
+    wav.append(contentsOf: "data".utf8)
+    appendU32LE(UInt32(dataSize))
+    // leading silence
+    wav.append(contentsOf: [UInt8](repeating: 0, count: paddingSamples * 2))
+    // audio samples
+    if let samples {
+      for i in 0..<count {
+        let clamped = max(-1.0, min(1.0, samples[i]))
+        let pcm16 = Int16(clamped * 32767.0)
+        var le = pcm16.littleEndian
+        withUnsafeBytes(of: &le) { wav.append(contentsOf: $0) }
+      }
+    }
+    // trailing silence
+    wav.append(contentsOf: [UInt8](repeating: 0, count: paddingSamples * 2))
+
+    try wav.write(to: outputURL)
   }
 }
 

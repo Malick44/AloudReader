@@ -73,7 +73,7 @@ function findTitle(nodes: any[]): string {
 }
 
 /** Extract <meta name="description"> / og:description content. */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
 function findMetaDescription(nodes: any[]): string {
   for (const node of nodes) {
     if (node.type === 'tag') {

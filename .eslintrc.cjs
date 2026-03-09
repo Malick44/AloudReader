@@ -7,6 +7,8 @@ module.exports = {
   ignorePatterns: ['node_modules', 'dist', '.expo', 'web-build'],
   rules: {
     'no-console': 'off',
+    '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+    '@typescript-eslint/no-unused-expressions': ['error', { allowShortCircuit: true, allowTernary: true }],
   },
   overrides: [
     {

@@ -14,11 +14,12 @@
 ## Determinism choices
 
 - Chunking is sentence-aware and bounded by max chunk size.
-- Cache key includes model ID + text + language + synthesis controls.
+- Cache key includes model ID + text + language + calibrated native synthesis speed.
 - Cache path is stable: `<tts>/cache/<sha256>.wav`.
 
 ## Playback controls
 
 - Queue control methods: `pause()`, `resume()`, `skipCurrent()`, `stop()`.
+- Local TTS speed is baked into generated WAV chunks; Track Player stays at `1x` for generated speech.
 - `stop()` always performs `player.pause()` then `player.remove()` before cleanup.
 - Reader UI reads live transport state from `useAudioPlayerStatus()`.

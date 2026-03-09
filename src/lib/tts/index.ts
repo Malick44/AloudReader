@@ -27,6 +27,8 @@ export * from './model-registry';
 export * from './catalog';
 export * from './pipeline';
 export * from './audioSession';
+export * from './trackPlayer';
+export * from './playback-rate';
 export * from './language-routing';
 export * from './cache';
 export * from './qa';

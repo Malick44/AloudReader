@@ -30,15 +30,17 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
-        {/* Legacy demo screens keep working while new route groups are added */}
+        {/* App route registration */}
         <Stack
           screenOptions={{
             headerTitle: t('navigation.header_title'),
             headerShadowVisible: false,
           }}
         >
-          {/* Demo / dev screens (kept for backwards compat) */}
+          {/* Entry route */}
           <Stack.Screen name="index" options={{ title: t('navigation.home_title') }} />
+
+          {/* Demo / dev screens */}
           <Stack.Screen name="tts-demo" options={{ title: t('navigation.tts_demo_title') }} />
           <Stack.Screen name="reader-demo" options={{ title: t('navigation.reader_demo_title') }} />
           <Stack.Screen name="benchmark" options={{ headerShown: false }} />

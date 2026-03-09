@@ -6,9 +6,9 @@ export default function SettingsGroupLayout() {
     const { t } = useAppTranslation();
 
     return (
-        <Stack screenOptions={{ headerShadowVisible: false }}>
+        <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="profile" options={{ title: t('settings.profile_title') }} />
-            <Stack.Screen name="voices" options={{ title: t('settings.voices_title') }} />
+            <Stack.Screen name="voices/index" options={{ title: t('settings.voices_title') }} />
             <Stack.Screen name="voices/[modelId]" options={{ title: '' }} />
             <Stack.Screen name="appearance" options={{ title: t('settings.appearance_title') }} />
             <Stack.Screen name="language" options={{ title: t('settings.language_title') }} />

@@ -179,8 +179,6 @@ PODS:
     - Yoga
   - ExpoAsset (55.0.8):
     - ExpoModulesCore
-  - ExpoAudio (55.0.8):
-    - ExpoModulesCore
   - ExpoCrypto (55.0.8):
     - ExpoModulesCore
   - ExpoDocumentPicker (55.0.8):
@@ -1736,6 +1734,9 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
+  - react-native-track-player (4.1.2):
+    - React-Core
+    - SwiftAudioEx (= 1.1.0)
   - React-NativeModulesApple (0.83.2):
     - hermes-engine
     - React-callinvoker
@@ -2263,6 +2264,51 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
+  - RNSVG (15.15.3):
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - RNSVG/common (= 15.15.3)
+    - Yoga
+  - RNSVG/common (15.15.3):
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - Yoga
   - RNWorklets (0.7.4):
     - hermes-engine
     - RCTRequired
@@ -2353,6 +2399,7 @@ PODS:
     - libwebp (~> 1.0)
     - SDWebImage/Core (~> 5.17)
   - SSZipArchive (2.5.5)
+  - SwiftAudioEx (1.1.0)
   - Yoga (0.0.0)
 
 DEPENDENCIES:
@@ -2365,7 +2412,6 @@ DEPENDENCIES:
   - expo-dev-menu (from `../node_modules/expo-dev-menu`)
   - expo-dev-menu-interface (from `../node_modules/expo-dev-menu-interface/ios`)
   - ExpoAsset (from `../node_modules/expo-asset/ios`)
-  - ExpoAudio (from `../node_modules/expo-audio/ios`)
   - ExpoCrypto (from `../node_modules/expo-crypto/ios`)
   - ExpoDocumentPicker (from `../node_modules/expo-document-picker/ios`)
   - "ExpoDomWebView (from `../node_modules/@expo/dom-webview/ios`)"
@@ -2426,6 +2472,7 @@ DEPENDENCIES:
   - React-Mapbuffer (from `../node_modules/react-native/ReactCommon`)
   - React-microtasksnativemodule (from `../node_modules/react-native/ReactCommon/react/nativemodule/microtasks`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
+  - react-native-track-player (from `../node_modules/react-native-track-player`)
   - React-NativeModulesApple (from `../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios`)
   - React-networking (from `../node_modules/react-native/ReactCommon/react/networking`)
   - React-oscompat (from `../node_modules/react-native/ReactCommon/oscompat`)
@@ -2463,6 +2510,7 @@ DEPENDENCIES:
   - "RNCAsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
   - RNReanimated (from `../node_modules/react-native-reanimated`)
   - RNScreens (from `../node_modules/react-native-screens`)
+  - RNSVG (from `../node_modules/react-native-svg`)
   - RNWorklets (from `../node_modules/react-native-worklets`)
   - RNZipArchive (from `../node_modules/react-native-zip-archive`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
@@ -2477,6 +2525,7 @@ SPEC REPOS:
     - SDWebImageSVGCoder
     - SDWebImageWebPCoder
     - SSZipArchive
+    - SwiftAudioEx
 
 EXTERNAL SOURCES:
   EXConstants:
@@ -2497,8 +2546,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/expo-dev-menu-interface/ios"
   ExpoAsset:
     :path: "../node_modules/expo-asset/ios"
-  ExpoAudio:
-    :path: "../node_modules/expo-audio/ios"
   ExpoCrypto:
     :path: "../node_modules/expo-crypto/ios"
   ExpoDocumentPicker:
@@ -2618,6 +2665,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/react/nativemodule/microtasks"
   react-native-safe-area-context:
     :path: "../node_modules/react-native-safe-area-context"
+  react-native-track-player:
+    :path: "../node_modules/react-native-track-player"
   React-NativeModulesApple:
     :path: "../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios"
   React-networking:
@@ -2692,6 +2741,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-reanimated"
   RNScreens:
     :path: "../node_modules/react-native-screens"
+  RNSVG:
+    :path: "../node_modules/react-native-svg"
   RNWorklets:
     :path: "../node_modules/react-native-worklets"
   RNZipArchive:
@@ -2709,7 +2760,6 @@ SPEC CHECKSUMS:
   expo-dev-menu: 3eeda9b0d7a101c4164132e14a494f26740b0b52
   expo-dev-menu-interface: bf6f816d29b45bec038080790963c635e8d588c2
   ExpoAsset: bdc7bc21fe25d197c3aa7547e14c12c42087d9c9
-  ExpoAudio: af1b3b6271e309bfc1ea4626284a47d3af49c7e1
   ExpoCrypto: 40320a7d4caa13b1f55691241220d961c7757519
   ExpoDocumentPicker: 9d82b922be941a74ba52f82df7ba123b334fbb5a
   ExpoDomWebView: f101fb3db4b6eec4163fca51f7507189b7e48661
@@ -2772,6 +2822,7 @@ SPEC CHECKSUMS:
   React-Mapbuffer: 8f8cbeb5bedb521cce0897a71274e3a72b5236a1
   React-microtasksnativemodule: bef4a47c7efd42421de52201e6d76a73cf6c816e
   react-native-safe-area-context: 37e680fc4cace3c0030ee46e8987d24f5d3bdab2
+  react-native-track-player: dd56f9948e03756a217c75e0a61aa04aab65b5a1
   React-NativeModulesApple: f9fa097fc24cec967b77bfc05f72d2ea7db05b87
   React-networking: 29a9ae1a2e6ce8bb19174cc47110b36ae7ffcbcd
   React-oscompat: 856e980339052dc5a35980a498e24dd8480acf29
@@ -2809,6 +2860,7 @@ SPEC CHECKSUMS:
   RNCAsyncStorage: 3a4f5e2777dae1688b781a487923a08569e27fe4
   RNReanimated: 9f562b0f1bc58c7571ac90127e6d9f0e93033534
   RNScreens: 02e62f995ceb94ea465864b3bf4d4767b87f0362
+  RNSVG: 0bd149b873018bc6e0e3321e2f6435bdba294460
   RNWorklets: 5eddf924d11308d62920405addeddc3dfe1daaaa
   RNZipArchive: 4304f5100eab004eeb7349adc51997b3a28deb76
   SDWebImage: e9fc87c1aab89a8ab1bbd74eba378c6f53be8abf
@@ -2816,6 +2868,7 @@ SPEC CHECKSUMS:
   SDWebImageSVGCoder: 15a300a97ec1c8ac958f009c02220ac0402e936c
   SDWebImageWebPCoder: e38c0a70396191361d60c092933e22c20d5b1380
   SSZipArchive: c69881e8ac5521f0e622291387add5f60f30f3c4
+  SwiftAudioEx: f6aa653770f3a0d3851edaf8d834a30aee4a7646
   Yoga: dd994d8c85dca5cc9b10f5df8c01f9ef1d0da191
 
 PODFILE CHECKSUM: 214de03c58f2d1ab00c23c59ee870556b3ff578a

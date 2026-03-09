@@ -11,6 +11,10 @@ export type AudioCacheStats = {
   totalBytes: number;
 };
 
+// Bump WAV_FORMAT_VERSION whenever the synthesized audio format changes
+// (e.g. silence padding added) so that stale cached files are re-generated.
+const WAV_FORMAT_VERSION = 3;
+
 export async function createCacheKey(input: {
   modelId: string;
   text: string;
@@ -19,6 +23,7 @@ export async function createCacheKey(input: {
   speakerId?: number;
 }): Promise<string> {
   const payload = JSON.stringify({
+    v: WAV_FORMAT_VERSION,
     modelId: input.modelId,
     text: input.text,
     language: input.language ?? 'default',

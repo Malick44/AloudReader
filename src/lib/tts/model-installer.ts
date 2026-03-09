@@ -26,6 +26,11 @@ const ESPEAK_MARKERS = ['phontab', 'en_dict', 'lang/gmw/en'] as const;
 const ESPEAK_DOWNLOAD_CONCURRENCY = 8;
 const MAX_INLINE_SHA256_BYTES = 32 * 1024 * 1024;
 
+// Promise dedup guards – prevents concurrent calls from racing on the same
+// resource (espeak-ng-data shared dir, or a specific model install).
+let espeakDownloadInFlight: Promise<string> | null = null;
+const modelInstallsInFlight = new Map<string, Promise<InstalledModel>>();
+
 function normalizeSha256(value: string): string {
   return value.trim().toLowerCase();
 }
@@ -204,7 +209,7 @@ async function listEspeakFilesFromHuggingFace(repoId: string): Promise<string[]>
   return files;
 }
 
-async function ensureSharedEspeakData(onStatus?: (status: string) => void): Promise<string> {
+async function doEnsureSharedEspeakData(onStatus?: (status: string) => void): Promise<string> {
   const sharedDir = getSharedEspeakDirectory();
   if (await hasSharedEspeakData(sharedDir)) {
     return sharedDir;
@@ -229,7 +234,7 @@ async function ensureSharedEspeakData(onStatus?: (status: string) => void): Prom
           toHuggingFaceResolveUrl(ESPEAK_SOURCE_REPO_ID, relativePath),
           targetPath
         );
-        if (download.status !== 200) {
+        if (download.status < 200 || download.status >= 300) {
           throw new TtsError('DOWNLOAD_FAILED', `espeak-ng-data download failed with status ${download.status}.`, {
             relativePath,
             status: download.status,
@@ -244,6 +249,17 @@ async function ensureSharedEspeakData(onStatus?: (status: string) => void): Prom
   }
 
   return sharedDir;
+}
+
+async function ensureSharedEspeakData(onStatus?: (status: string) => void): Promise<string> {
+  // Deduplicate concurrent calls so two simultaneous piper installs don't wipe
+  // each other's shared espeak-ng-data directory on iOS.
+  if (!espeakDownloadInFlight) {
+    espeakDownloadInFlight = doEnsureSharedEspeakData(onStatus).finally(() => {
+      espeakDownloadInFlight = null;
+    });
+  }
+  return espeakDownloadInFlight;
 }
 
 async function withSupplementalAssets(
@@ -298,7 +314,7 @@ async function downloadArchive(model: ModelCatalogEntry): Promise<string> {
 
   const target = getArchivePath(model.id);
   const download = await FileSystem.downloadAsync(model.archiveUrl, target);
-  if (download.status !== 200) {
+  if (download.status < 200 || download.status >= 300) {
     throw new TtsError('DOWNLOAD_FAILED', `Archive download failed with status ${download.status}.`, {
       url: model.archiveUrl,
     });
@@ -328,7 +344,7 @@ async function downloadArtifacts(model: ModelCatalogEntry, modelDirectory: strin
     await ensureDirectory(targetDir);
 
     const result = await FileSystem.downloadAsync(url, targetPath);
-    if (result.status !== 200) {
+    if (result.status < 200 || result.status >= 300) {
       throw new TtsError('DOWNLOAD_FAILED', `Artifact download failed with status ${result.status}.`, {
         url,
         relativePath,
@@ -363,6 +379,23 @@ async function extractArchiveIfConfigured(model: ModelCatalogEntry, modelDirecto
 }
 
 export async function installModel(params: InstallModelParams): Promise<InstalledModel> {
+  const { model } = params;
+
+  // Deduplicate concurrent installs of the same model. On iOS, bootstrapDefaultModel()
+  // is triggered on screen mount and can race with a manual user-initiated install.
+  const inFlight = modelInstallsInFlight.get(model.id);
+  if (inFlight) {
+    return inFlight;
+  }
+
+  const promise = doInstallModel(params).finally(() => {
+    modelInstallsInFlight.delete(model.id);
+  });
+  modelInstallsInFlight.set(model.id, promise);
+  return promise;
+}
+
+async function doInstallModel(params: InstallModelParams): Promise<InstalledModel> {
   const { model, onStatus } = params;
 
   onStatus?.('checking-registry');
@@ -374,7 +407,9 @@ export async function installModel(params: InstallModelParams): Promise<Installe
     }
 
     onStatus?.('repairing-stale-install');
-    await removePath(existing.installDir);
+    // Best-effort removal of the stale directory. On iOS the path may point to a
+    // previous app container UUID that no longer exists — swallow those errors.
+    await removePath(existing.installDir).catch(() => undefined);
     await removeInstalledEntry(existing.modelId);
   }
 

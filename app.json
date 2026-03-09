@@ -8,7 +8,6 @@
     "userInterfaceStyle": "automatic",
     "plugins": [
       "expo-router",
-      "expo-audio",
       "expo-asset",
       "expo-localization",
       [
@@ -21,7 +20,10 @@
       ]
     ],
     "ios": {
-      "bundleIdentifier": "com.ai-orbit-studio.aloudreader"
+      "bundleIdentifier": "com.ai-orbit-studio.aloudreader",
+      "infoPlist": {
+        "UIBackgroundModes": ["audio"]
+      }
     },
     "android": {
       "package": "com.aiorbitstudio.aloudreader"
