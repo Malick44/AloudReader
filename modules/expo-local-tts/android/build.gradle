@@ -1,0 +1,56 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'com.aiorbitstudio.aloudreader.tts'
+version = '0.7.9'
+
+def sherpaVersion = '1.12.28'
+def sherpaAarName = "sherpa-onnx-${sherpaVersion}.aar"
+def sherpaAarPath = file("${projectDir}/libs/${sherpaAarName}")
+def sherpaAarUrl = "https://github.com/k2-fsa/sherpa-onnx/releases/download/v${sherpaVersion}/${sherpaAarName}"
+
+android {
+  namespace "com.aiorbitstudio.aloudreader.tts"
+  defaultConfig {
+    versionCode 1
+    versionName "0.7.9"
+  }
+  lintOptions {
+    abortOnError false
+  }
+}
+
+repositories {
+  google()
+  mavenCentral()
+  flatDir {
+    dirs 'libs'
+  }
+}
+
+tasks.register('downloadSherpaAar') {
+  outputs.file(sherpaAarPath)
+  doLast {
+    if (sherpaAarPath.exists()) {
+      return
+    }
+
+    sherpaAarPath.parentFile.mkdirs()
+    logger.lifecycle("Downloading ${sherpaAarName} from ${sherpaAarUrl}")
+    new URL(sherpaAarUrl).withInputStream { input ->
+      sherpaAarPath.withOutputStream { output ->
+        output << input
+      }
+    }
+  }
+}
+
+tasks.matching { it.name == 'preBuild' }.configureEach {
+  dependsOn tasks.named('downloadSherpaAar')
+}
+
+dependencies {
+  implementation files("libs/${sherpaAarName}")
+}

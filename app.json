@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "AloudReader",
+    "slug": "aloudreader",
+    "scheme": "aloudreader",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "plugins": [
+      "expo-router",
+      "expo-audio",
+      "expo-asset",
+      "expo-localization",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "deploymentTarget": "15.5"
+          }
+        }
+      ]
+    ],
+    "ios": {
+      "bundleIdentifier": "com.ai-orbit-studio.aloudreader"
+    },
+    "android": {
+      "package": "com.aiorbitstudio.aloudreader"
+    },
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

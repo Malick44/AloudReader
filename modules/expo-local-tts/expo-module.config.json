@@ -1,0 +1,9 @@
+{
+  "platforms": ["apple", "android", "web"],
+  "apple": {
+    "modules": ["ExpoLocalTtsModule"]
+  },
+  "android": {
+    "modules": ["com.aiorbitstudio.aloudreader.tts.ExpoLocalTtsModule"]
+  }
+}
