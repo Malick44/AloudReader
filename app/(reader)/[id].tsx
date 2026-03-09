@@ -51,7 +51,7 @@ export default function ReaderScreen() {
             }
 
             setDocTitle(title);
-            
+
             navigation.setOptions({
                 title: 'Now Reading',
                 headerTitleAlign: 'center',
@@ -145,8 +145,8 @@ export default function ReaderScreen() {
                 {/* Current chunk highlight */}
                 {reader.activeChunk && (
                     <View style={[
-                        styles.activeHighlight, 
-                        { 
+                        styles.activeHighlight,
+                        {
                             backgroundColor: colors.primary + '15', // light blue background
                             borderLeftColor: colors.primary,
                         }
@@ -163,7 +163,7 @@ export default function ReaderScreen() {
                         {reader.errorMessage}
                     </Text>
                 )}
-                
+
                 <View style={{ height: 160 }} />
             </ScrollView>
 
@@ -196,7 +196,7 @@ export default function ReaderScreen() {
                         <Text style={[styles.skipText, { color: colors.foreground }]}>{SKIP_TXT}</Text>
                     </Pressable>
 
-                    <Pressable 
+                    <Pressable
                         style={[styles.playPauseBtn, { backgroundColor: colors.primary, shadowColor: colors.primary }]}
                         onPress={handlePlayPause}
                     >
@@ -276,7 +276,7 @@ const styles = StyleSheet.create({
         fontWeight: '500',
     },
     errorText: { fontSize: 14 },
-    
+
     // Bottom Bar Styles
     bottomBar: {
         position: 'absolute',
